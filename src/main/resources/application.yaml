@@ -1,0 +1,16 @@
+datasource:
+  url: jdbc:h2:mem:review_agent_db;DB_CLOSE_DELAY=-1
+  username: sa
+  password: ""
+
+flyway:
+  locations: classpath:db/migration
+
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.1:8b
+  timeout-seconds: 120
+  temperature: 0.1
+
+prompt:
+  system-file: prompts/system-prompt-v3.txt
