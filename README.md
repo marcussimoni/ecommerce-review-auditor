@@ -11,7 +11,7 @@ Implementado em **Java puro (sem Spring/frameworks pesados)**, com banco **H2 em
 ### Pré-requisitos
 - **JDK 25** (ou compatível com a configuração do projeto) instalado e configurado no `PATH`.
 - **Apache Maven** instalado para compilação e execução do projeto.
-- **Ollama** instalado e em execução localmente, com o modelo configurado baixado (ex.: `llama3.1:8b`).
+- **Ollama** instalado e em execução localmente, com o modelo configurado baixado (ex.: `gemma4:e4b`).
 
 ### Execução do projeto
 Ambientes Linux:
@@ -27,8 +27,14 @@ mvnw.exe compile exec:java -Dexec.mainClass=br.com.ecommercereviewauditor.Main
 ```bash
 ./mvnw test
 ```
+![Testes unitário](./images/img-04.png)
 
-![testes unitário](./images/img-04.png)
+#### Testes de integração
+```bash
+./mvnw verify
+```
+![Testes de integração](./images/img-05.png)
+
 
 #### Após a execução dos comando acima o seguinte menu será apresentado:
 ![terminal de acesso](./images/img-01.png)
@@ -50,9 +56,8 @@ Password:
 - As configurações de banco H2, Flyway, Ollama e versão do *system prompt* ficam centralizadas em `src/main/resources/application.yaml` (referência a ser atualizada posteriormente conforme o ambiente).
 - A execução e os testes do projeto podem ser rodados pela IDE ou via linha de comando conforme documentado no guia de execução do repositório (referência a ser atualizada posteriormente).
 - Comandos disponíveis no terminal (CLI):
-  - `<ID_PRODUTO>` (ex.: `PROD-001` a `PROD-005`): busca as avaliações no H2 via JDBC, envia ao Ollama (`/v1/chat/completions`), exibe a análise com os IDs e motivos das avaliações divergentes e salva o relatório em `relatorios_revisao` quando houver fator externo real.
+  - `<ID_PRODUTO>` (ex.: `PROD-001` a `PROD-015`): busca as avaliações no H2 via JDBC, envia ao Ollama (`/v1/chat/completions`), exibe a análise com os IDs e motivos das avaliações divergentes e salva o relatório em `relatorios_revisao` quando houver fator externo real.
   - `relatorios`: lista todos os relatórios de revisão persistidos no banco H2, incluindo IDs das avaliações divergentes, motivos consolidados e detalhes.
-  - `testes`: executa os casos de teste iniciais para os produtos simulados (`PROD-001` a `PROD-005`) diretamente no terminal.
   - `sair`: encerra a aplicação.
 
 ---

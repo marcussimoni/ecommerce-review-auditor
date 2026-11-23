@@ -28,14 +28,14 @@ Nesse momento, definiu-se também uma arquitetura enxuta e transparente, adequad
 - **Decisão de utilizar RAG estruturado (ou determinístico via SQL/JDBC)**, a aplicação Java (`AvaliacaoJdbcService`) consulta diretamente as avaliações por `produto_id` via JDBC, injeta os dados no prompt e envia ao endpoint `/v1/chat/completions` do Ollama com `response_format` em JSON Schema estrito. A persistência do relatório (`RelatorioJdbcService`) é executada de forma determinística pelo código Java quando há fator externo real.
 - **Uso de Temperatura Baixa (`0.1`) para Previsibilidade:** Para reduzir a variabilidade inerente aos modelos de linguagem e garantir que a classificação de fatores externos e o preenchimento do schema JSON sigam um comportamento estrito e reproduzível entre diferentes execuções, adotou-se uma temperatura baixa (`temperature: 0.1`) na configuração da API.
 - **Rastreabilidade de avaliações divergentes no relatório:** O schema de saída e a tabela `relatorios_revisao` registram não apenas a contagem de avaliações externas, mas também quais avaliações específicas foram apontadas (`avaliacoesDivergentes` / `avaliacoes_divergentes_ids` / `detalhes_divergencias`).
-- **Consolidação determinística de múltiplos motivos no Java:** Quando uma análise identifica mais de um fator externo distinto entre as avaliações divergentes (ex.: `ATENDIMENTO_VENDEDOR` e `LOGISTICA_TRANSPORTADORA` no `PROD-005`), o código Java consolida os motivos distintos a partir de `avaliacoesDivergentes` e aplica uma trava determinística (`filtrarFatoresExternosReais` e `precisaRevisaoReal`) para impedir que defeitos intrínsecos do produto (`PRODUTO`, `DEFEITO_PRODUTO`) ou `NENHUM` disparem revisão por fator externo.
+- **Consolidação determinística de múltiplos motivos no Java:** Quando uma análise identifica mais de um fator externo distinto entre as avaliações divergentes (ex.: `ATENDIMENTO_VENDEDOR` e `LOGISTICA_TRANSPORTADORA` no `PROD-015`), o código Java consolida os motivos distintos a partir de `avaliacoesDivergentes` e aplica uma trava determinística (`filtrarFatoresExternosReais` e `precisaRevisaoReal`) para impedir que defeitos intrínsecos do produto (`PRODUTO`, `DEFEITO_PRODUTO`) ou `NENHUM` disparem revisão por fator externo.
 - **Interação via terminal (CLI):** Interface simples em linha de comando (`Main.java`) adequada ao escopo acadêmico e à execução local.
 
 ---
 
 ## Etapa 2 — Preparação dos Cenários de Avaliação
 
-Para testar o comportamento do agente de forma consistente, estruturou-se uma massa de dados simulada composta por **5 produtos** com múltiplas avaliações cada. A escolha de cenários variados foi fundamental para evitar uma avaliação enviesada apenas por casos simples.
+Para testar o comportamento do agente de forma consistente, estruturou-se uma massa de dados simulada composta por **15 produtos** com múltiplas avaliações cada. A escolha de cenários variados foi fundamental para evitar uma avaliação enviesada apenas por casos simples.
 
 Os conjuntos de avaliações foram desenhados para contemplar situações recorrentes no e-commerce:
 
@@ -87,10 +87,30 @@ Para resolver isso de forma previsível:
 
 Com as regras refinadas, a validação foi realizada em múltiplas frentes:
 
-- **Base de dados e cenários (`V2__seed_avaliacoes.sql`):** 5 produtos simulados (`PROD-001` a `PROD-005`) com múltiplas avaliações por produto, cobrindo fatores externos (logística, embalagem, atendimento), defeitos reais do produto, avaliações coerentes e tentativas de *prompt injection* embutidas em comentários.
+- **Base de dados e cenários (`V2__seed_avaliacoes.sql`):** 5 produtos simulados (`PROD-001` a `PROD-015`) com múltiplas avaliações por produto, cobrindo fatores externos (logística, embalagem, atendimento), defeitos reais do produto, avaliações coerentes e tentativas de *prompt injection* embutidas em comentários.
 - **Testes automatizados (`ReviewAgentTest.java`):** verificam consultas JDBC no H2, persistência e leitura de relatórios (incluindo IDs e detalhes de avaliações divergentes), formatação/isolamento no `PromptBuilder`, trava determinística de fatores externos no `RelatorioJdbcService` e testes integrados opcionais contra o Ollama.
-- **Validação via CLI (`testes`):** executa o lote de produtos de exemplo (`PROD-001` a `PROD-005`), compara o resultado obtido com o esperado, registra relatórios quando aplicável e exibe o resumo de acertos no terminal, permitindo comparar o comportamento entre versões de prompt (`v1`, `v2`, `v3`).
+- **Validação via CLI (`testes`):** executa o lote de produtos de exemplo (`PROD-001` a `PROD-015`), compara o resultado obtido com o esperado, registra relatórios quando aplicável e exibe o resumo de acertos no terminal, permitindo comparar o comportamento entre versões de prompt (`v1`, `v2`, `v3`).
 
+### Resultado da execução dos testes
+#### --- Executando 15 Casos de Teste Iniciais ---
+| Resultado | Produto | Esperado | Obtido | Motivos | Divergentes |
+| :--- | :--- | :---: | :---: | :--- | :--- |
+| PASS | PROD-001 | true | true | EMBALAGEM_DANIFICADA, LOGISTICA_ENTREGA, ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA/EMBALAGEM_DANIFICADA | [7, 5, 3, 2] |
+| PASS | PROD-002 | false | false | NENHUM | [] |
+| PASS | PROD-003 | true | true | EMBALAGEM_DANIFICADA, LOGISTICA_TRANSPORTADORA, LOGISTICA_ENTREGA / ATENDIMENTO_VENDEDOR | [19, 17, 16] |
+| PASS | PROD-004 | false | false | NENHUM | [] |
+| PASS | PROD-005 | true | true | ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA | [32, 29] |
+| PASS | PROD-006 | false | false | NENHUM | [] |
+| PASS | PROD-007 | true | true | ATENDIMENTO_VENDEDOR, LOGISTICA_TRANSPORTADORA, EMBALAGEM_DANIFICADA | [47, 44, 42] |
+| PASS | PROD-008 | true | true | EMBALAGEM_DANIFICADA | [53] |
+| PASS | PROD-009 | true | true | ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA | [59, 56] |
+| PASS | PROD-010 | false | false | NENHUM | [] |
+| PASS | PROD-011 | true | true | EMBALAGEM_DANIFICADA, ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA | [71, 69, 68] |
+| PASS | PROD-012 | false | false | NENHUM | [] |
+| PASS | PROD-013 | true | true | EMBALAGEM_DANIFICADA, ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA | [88, 85, 81] |
+| PASS | PROD-014 | true | true | LOGISTICA_ENTREGA | [93] |
+| PASS | PROD-015 | true | true | ATENDIMENTO, EMBALAGEM_DANIFICADA, LOGISTICA_ENTREGA | [101, 98, 95] |
+#### Resumo dos testes: 15/15 passaram.
 ### Segurança, Guardrails e Conformidade
 
 - **Restrição de acesso e superfície de ataque:** O modelo de linguagem não possui acesso a ferramentas do sistema operacional, terminal, rede externa ou execução direta de SQL; toda leitura e escrita no banco H2 ocorre exclusivamente no código Java via `PreparedStatement`.

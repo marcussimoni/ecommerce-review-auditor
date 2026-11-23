@@ -13,9 +13,7 @@ import br.com.ecommercereviewauditor.service.AvaliacaoJdbcService;
 import br.com.ecommercereviewauditor.service.RelatorioJdbcService;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
@@ -36,9 +34,8 @@ public class Main {
 		System.out.println("Modelo configurado: " + ollamaConfig.getModel() + " (" + ollamaConfig.getBaseUrl() + ")");
 		System.out.println("Prompt ativo      : " + promptBuilder.getSystemPromptPath());
 		System.out.println("Comandos:");
-		System.out.println("  - <ID_PRODUTO> : analisa avaliações do banco (ex.: PROD-001 a PROD-005)");
+		System.out.println("  - <ID_PRODUTO> : analisa avaliações do banco (ex.: PROD-001 a PROD-015)");
 		System.out.println("  - relatorios   : lista todos os relatórios de revisão salvos no banco");
-		System.out.println("  - testes       : executa casos de teste iniciais no terminal");
 		System.out.println("  - sair         : encerra a aplicação");
 
 		try (Scanner scanner = new Scanner(System.in)) {
@@ -56,10 +53,6 @@ public class Main {
 				}
 				if (entrada.equalsIgnoreCase("relatorios")) {
 					listarRelatoriosSalvos(relatorioService);
-					continue;
-				}
-				if (entrada.equalsIgnoreCase("testes")) {
-					executarCasosDeTesteIniciais(avaliacaoService, relatorioService, ollamaChatClient);
 					continue;
 				}
 
@@ -132,64 +125,6 @@ public class Main {
 		}
 	}
 
-	private static void executarCasosDeTesteIniciais(
-			AvaliacaoJdbcService avaliacaoService,
-			RelatorioJdbcService relatorioService,
-			OllamaChatClient ollamaChatClient
-	) {
-		Map<String, Boolean> casosEsperados = casosIniciais();
-		int acertos = 0;
-
-		System.out.println("\n--- Executando " + casosEsperados.size() + " Casos de Teste Iniciais ---");
-
-		for (Map.Entry<String, Boolean> entry : casosEsperados.entrySet()) {
-			String produtoId = entry.getKey();
-			boolean esperadoRevisao = entry.getValue();
-
-			List<AvaliacaoProduto> avaliacoes = avaliacaoService.buscarPorProdutoId(produtoId);
-			if (avaliacoes.isEmpty()) {
-				System.out.printf("[SKIP] %s: sem avaliações no banco.%n", produtoId);
-				continue;
-			}
-
-			try {
-				AnaliseAvaliacoesResponse resp = ollamaChatClient.analisarAvaliacoes(produtoId, avaliacoes);
-				List<AvaliacaoDivergente> divergentesReais = RelatorioJdbcService.filtrarFatoresExternosReais(
-						resp.avaliacoesDivergentes());
-				boolean obtidoRevisao = RelatorioJdbcService.precisaRevisaoReal(
-						resp.precisaRevisao(), divergentesReais);
-
-				boolean passou = obtidoRevisao == esperadoRevisao;
-				if (passou) {
-					acertos++;
-					if (obtidoRevisao) {
-						relatorioService.salvarRelatorio(
-								resp.produtoId(),
-								resp.motivoPrincipal(),
-								resp.resumo(),
-								resp.totalAvaliacoesAnalisadas(),
-								divergentesReais.size(),
-								divergentesReais
-						);
-					}
-				}
-				String motivos = RelatorioJdbcService.consolidarMotivos(
-						resp.motivoPrincipal(), divergentesReais);
-				System.out.printf("[%s] %s | esperado=%s | obtido=%s | motivos=%s | divergentes=%s%n",
-						passou ? "PASS" : "FAIL",
-						produtoId,
-						esperadoRevisao,
-						obtidoRevisao,
-						motivos,
-						extrairIds(divergentesReais));
-			} catch (Exception e) {
-				System.out.printf("[ERRO] %s: %s%n", produtoId, e.getMessage());
-			}
-		}
-
-		System.out.printf("Resumo dos testes: %d/%d passaram.%n", acertos, casosEsperados.size());
-	}
-
 	private static String extrairIds(List<AvaliacaoDivergente> divergentes) {
 		if (divergentes == null || divergentes.isEmpty()) {
 			return "[]";
@@ -199,16 +134,6 @@ public class Main {
 				.reduce((a, b) -> a + ", " + b)
 				.map(s -> "[" + s + "]")
 				.orElse("[]");
-	}
-
-	private static Map<String, Boolean> casosIniciais() {
-		return Map.of(
-				"PROD-001", true,
-				"PROD-002", false,
-				"PROD-003", true,
-				"PROD-004", false,
-				"PROD-005", true
-		);
 	}
 
 	private static void imprimirResultadoAnalise(
@@ -237,9 +162,4 @@ public class Main {
 		System.out.println("--------------------------------------------------");
 	}
 
-	public static AvaliacaoProduto avaliacaoMock(
-			Long id, String produtoId, String nomeProduto, String vendedorId, int estrelas, String comentario
-	) {
-		return new AvaliacaoProduto(id, produtoId, nomeProduto, vendedorId, estrelas, comentario, LocalDateTime.now());
-	}
 }

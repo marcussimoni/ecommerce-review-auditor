@@ -1,10 +1,8 @@
 package br.com.ecommercereviewauditor;
 
 import br.com.ecommercereviewauditor.config.PromptBuilder;
-import br.com.ecommercereviewauditor.entities.AnaliseAvaliacoesResponse;
 import br.com.ecommercereviewauditor.entities.AvaliacaoDivergente;
 import br.com.ecommercereviewauditor.entities.AvaliacaoProduto;
-import br.com.ecommercereviewauditor.entities.RelatorioRevisao;
 import br.com.ecommercereviewauditor.service.RelatorioJdbcService;
 import org.junit.jupiter.api.Test;
 
