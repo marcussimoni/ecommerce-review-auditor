@@ -49,14 +49,11 @@ mvnw.exe compile exec:java -Dexec.mainClass=br.com.ecommercereviewauditor.Main
 ```bash
 ./mvnw test
 ```
-![Testes unitário](./images/img-04.png)
 
 ### Testes de integração
 ```bash
 ./mvnw verify
 ```
-![Testes de integração](./images/img-05.png)
-
 
 ## Acesso ao console do H2 no browser
 ```browser

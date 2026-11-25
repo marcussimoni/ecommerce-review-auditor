@@ -83,16 +83,20 @@ Para resolver isso de forma previsível:
 
 ---
 
-## Etapa 5 — Validação por Testes, Ajustes Operacionais e Segurança
+## Etapa 5 — Validação por Testes Automatizados, Ajustes Operacionais e Segurança
 
 Com as regras refinadas, a validação foi realizada em múltiplas frentes:
 
-- **Base de dados e cenários (`V2__seed_avaliacoes.sql`):** 5 produtos simulados (`PROD-001` a `PROD-015`) com múltiplas avaliações por produto, cobrindo fatores externos (logística, embalagem, atendimento), defeitos reais do produto, avaliações coerentes e tentativas de *prompt injection* embutidas em comentários.
-- **Testes automatizados (`ReviewAgentTest.java`):** verificam consultas JDBC no H2, persistência e leitura de relatórios (incluindo IDs e detalhes de avaliações divergentes), formatação/isolamento no `PromptBuilder`, trava determinística de fatores externos no `RelatorioJdbcService` e testes integrados opcionais contra o Ollama.
-- **Validação via CLI (`testes`):** executa o lote de produtos de exemplo (`PROD-001` a `PROD-015`), compara o resultado obtido com o esperado, registra relatórios quando aplicável e exibe o resumo de acertos no terminal, permitindo comparar o comportamento entre versões de prompt (`v1`, `v2`, `v3`).
+- **Base de dados e cenários (`V2__seed_avaliacoes.sql`):** 15 produtos simulados (`PROD-001` a `PROD-015`) com múltiplas avaliações por produto, cobrindo fatores externos (logística, embalagem, atendimento), defeitos reais do produto, avaliações coerentes e tentativas de *prompt injection* embutidas em comentários.
+- **Testes unitários (`ReviewAgentTest.java`, `JdbcServiceTest.java`):** verificam consultas JDBC no H2, persistência e leitura de relatórios (incluindo IDs e detalhes de avaliações divergentes), formatação/isolamento no `PromptBuilder`, trava determinística de fatores externos no `RelatorioJdbcService`.
+- **Testes integrados (`ReviewAgentTestIT`) contra o Ollama** executa o lote de produtos de exemplo (`PROD-001` a `PROD-015`), compara o resultado obtido com o esperado, registra relatórios quando aplicável e exibe o resumo de acertos no terminal, permitindo comparar o comportamento entre versões de prompt (`v1`, `v2`, `v3`).
 
-### Resultado da execução dos testes
-#### --- Executando 15 Casos de Teste Iniciais ---
+### Resultado da execução dos testes automatizados
+#### Testes unitários
+![Testes unitário](./images/img-04.png)
+#### Testes de integração
+![Testes de integração](./images/img-05.png)
+#### --- Resultados dos 15 Casos de Teste de integração no Ollama (gemma4) ---
 | Resultado | Produto | Esperado | Obtido | Motivos | Divergentes |
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | PASS | PROD-001 | true | true | EMBALAGEM_DANIFICADA, LOGISTICA_ENTREGA, ATENDIMENTO_VENDEDOR, LOGISTICA_ENTREGA/EMBALAGEM_DANIFICADA | [7, 5, 3, 2] |
