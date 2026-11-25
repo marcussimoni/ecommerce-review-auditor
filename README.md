@@ -7,8 +7,6 @@ Implementado em **Java puro (sem Spring/frameworks pesados)**, com banco **H2 em
 ## Relatório técnico
 Acesso ao relatório com os processo detalhado, resultado obtidos e informações técnicas: [Acesso ao relatório técnico](relatorio_tecnico.md)
 
----
-
 ## Pré-requisitos e Como Executar o projeto
 
 ### Pré-requisitos
@@ -24,8 +22,6 @@ Acesso ao relatório com os processo detalhado, resultado obtidos e informaçõe
   - `relatorios`: lista todos os relatórios de revisão persistidos no banco H2, incluindo IDs das avaliações divergentes, motivos consolidados e detalhes.
   - `sair`: encerra a aplicação.
 
----
-
 ## Diagramas do Projeto e Visão Geral
 
 ### Diagrama de arquitetura de solução
@@ -33,7 +29,6 @@ Acesso ao relatório com os processo detalhado, resultado obtidos e informaçõe
 
 ## Diagrama de sequência
 ![Diagrama 02](./images/diagrama-02.jpg)
----
 
 ## Execução do projeto
 ### Ambientes Linux:
@@ -62,7 +57,7 @@ mvnw.exe compile exec:java -Dexec.mainClass=br.com.ecommercereviewauditor.Main
 ```
 ![Testes de integração](./images/img-05.png)
 
----
+
 ## Acesso ao console do H2 no browser
 ```browser
 URL: http://192.168.3.112:8082
