@@ -4,8 +4,10 @@ Agente de IA desenvolvido para trabalho acadêmico com foco na análise de sess�
 
 Implementado em **Java puro (sem Spring/frameworks pesados)**, com banco **H2 em memória**, migrações via **Flyway**, acesso a dados via **JDBC**, interface via **terminal (CLI)** e integração com **Ollama local** via `/v1/chat/completions` com `response_format` (`json_schema`).
 
-## Relatório técnico
-Acesso ao relatório com os processo detalhado, resultado obtidos e informações técnicas: [Acesso ao relatório técnico](relatorio_tecnico.md)
+## Relatório técnico e documentos de apresentação
+##### Acesso ao relatório com os processo detalhado, resultado obtidos e informações técnicas: [Relatório técnico](relatorio_tecnico.md)
+##### Acesso ao documento de análise técnica: [Análise tecnica](./docs/ecommerce_review_auditor.pdf)
+##### Acesso ao documento de apresentação do projeto: [Documento de apresentação do projeto](./docs/Arquiteturas_de_Agentes_de_IA.pptx)
 
 ## Pré-requisitos e Como Executar o projeto
 
